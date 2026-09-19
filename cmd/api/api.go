@@ -35,7 +35,9 @@ func (s *APIServer) Run() error {
 	// Isso permite que todas as rotas relacionadas à API sejam organizadas sob um prefixo comum.
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
-	userHandler := user.NewHandler()
+	userStore := user.NewStore(s.db)
+
+	userHandler := user.NewHandler(userStore)
 	userHandler.RegisterRoutes(subrouter)
 
 	log.Printf("Listening on %s", s.addr)
