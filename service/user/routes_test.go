@@ -18,7 +18,7 @@ func TestUserServiceHandlers(t *testing.T) {
 
 	handler := NewHandler(userStore)
 
-	t.Run("Should fail if the payload is invalid", func(t *testing.T) {
+	t.Run("should fail if the payload is invalid", func(t *testing.T) {
 		payload := types.RegisterUserPayload{
 			FirstName: "Guilherme",
 			LastName:  "Henriques",
@@ -40,6 +40,32 @@ func TestUserServiceHandlers(t *testing.T) {
 
 		router.ServeHTTP(rr, req)
 		if rr.Code != http.StatusBadRequest {
+			t.Errorf("Expected status code %d, but got %d", http.StatusBadRequest, rr.Code)
+		}
+	})
+
+	t.Run("should correctly register a user", func(t *testing.T) {
+		payload := types.RegisterUserPayload{
+			FirstName: "Guilherme",
+			LastName:  "Henriques",
+			Email:     "as@gmail.com",
+			Password:  "password",
+		}
+
+		marshalled, _ := json.Marshal(payload)
+
+		req, err := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(marshalled))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		rr := httptest.NewRecorder()
+		router := mux.NewRouter()
+
+		router.HandleFunc("/register", handler.handleRegister)
+
+		router.ServeHTTP(rr, req)
+		if rr.Code != http.StatusCreated {
 			t.Errorf("Expected status code %d, but got %d", http.StatusBadRequest, rr.Code)
 		}
 	})

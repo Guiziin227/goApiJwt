@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
 	"github.com/guiziin227/goApiJwt/service/auth"
 	"github.com/guiziin227/goApiJwt/types"
@@ -32,6 +33,17 @@ func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 
 	if err := utils.ParseJson(r, &payload); err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate payload
+
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("validation error: %s", errors.Error()))
+
 		return
 	}
 
