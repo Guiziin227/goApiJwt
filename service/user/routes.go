@@ -54,7 +54,7 @@ func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !auth.ComparePassword(u.Password, []byte(payload.Password)) {
+	if !auth.ComparePasswords(u.Password, []byte(payload.Password)) {
 		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("not found, invalid credentials"))
 		return
 	}
