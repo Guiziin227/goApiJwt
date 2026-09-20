@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gorilla/mux"
+	"github.com/guiziin227/goApiJwt/config"
 	"github.com/guiziin227/goApiJwt/service/auth"
 	"github.com/guiziin227/goApiJwt/types"
 	"github.com/guiziin227/goApiJwt/utils"
@@ -24,7 +25,50 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/register", h.handleRegister).Methods("POST")
 }
 
-func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {}
+func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+
+	//get json payload
+	var payload types.LoginUserPayload
+
+	if err := utils.ParseJson(r, &payload); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// validate payload
+
+	if err := utils.Validate.Struct(payload); err != nil {
+		errors := err.(validator.ValidationErrors)
+
+		utils.WriteError(w, http.StatusBadRequest,
+			fmt.Errorf("validation error: %s", errors.Error()))
+
+		return
+	}
+
+	//check if user exists
+
+	u, err := h.store.GetUserByEmail(payload.Email)
+	if err != nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s not found", payload.Email))
+		return
+	}
+
+	if !auth.ComparePassword(u.Password, []byte(payload.Password)) {
+		utils.WriteError(w, http.StatusUnauthorized, fmt.Errorf("not found, invalid credentials"))
+		return
+	}
+
+	secret := []byte(config.Envs.JWTSecret)
+	token, err := auth.CreateJWT(secret, u.ID)
+
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJson(w, http.StatusOK, map[string]string{"token": token})
+}
 
 func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
 

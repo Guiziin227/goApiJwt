@@ -28,7 +28,7 @@ func (s *Store) GetUserByEmail(email string) (*types.User, error) {
 
 	u := new(types.User)
 	for rows.Next() {
-		u, err = scarRowIntoUser(rows)
+		u, err = scanRowIntoUser(rows)
 		if err != nil {
 			return nil, err
 		}
@@ -42,15 +42,41 @@ func (s *Store) GetUserByEmail(email string) (*types.User, error) {
 }
 
 func (s *Store) GetUserById(id int) (*types.User, error) {
-	//TODO implement me
-	panic("implement me")
+	rows, err := s.db.Query(
+		"SELECT * FROM users WHERE id = ?",
+		id,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	u := new(types.User)
+	for rows.Next() {
+		u, err = scanRowIntoUser(rows)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if u.ID == 0 {
+		return nil, fmt.Errorf("user with id %d not found", id)
+	}
+
+	return u, nil
 }
 
 func (s *Store) CreateUser(user *types.User) error {
+	_, err := s.db.Exec("INSERT INTO users "+
+		"(first_name, last_name, email, password) "+
+		"VALUES (?, ?, ?, ?)", user.FirstName, user.LastName, user.Email, user.Password)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func scarRowIntoUser(rows *sql.Rows) (*types.User, error) {
+func scanRowIntoUser(rows *sql.Rows) (*types.User, error) {
 	user := new(types.User)
 
 	err := rows.Scan(
