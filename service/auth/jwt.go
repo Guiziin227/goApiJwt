@@ -16,7 +16,7 @@ import (
 
 type contextKey string
 
-const UserKey contextKey = "userID"
+const UserKey contextKey = "user_id"
 
 func WithJWTAuth(handlerFunc http.HandlerFunc, store types.UserStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +36,7 @@ func WithJWTAuth(handlerFunc http.HandlerFunc, store types.UserStore) http.Handl
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-		str := claims["userID"].(string)
+		str := claims["user_id"].(string)
 
 		userID, err := strconv.Atoi(str)
 		if err != nil {
