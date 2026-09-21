@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/guiziin227/goApiJwt/service/product"
 	"github.com/guiziin227/goApiJwt/service/user"
 )
 
@@ -36,9 +37,13 @@ func (s *APIServer) Run() error {
 	subrouter := router.PathPrefix("/api/v1").Subrouter()
 
 	userStore := user.NewStore(s.db)
+	productStore := product.NewStore(s.db)
 
 	userHandler := user.NewHandler(userStore)
 	userHandler.RegisterRoutes(subrouter)
+
+	productHandler := product.NewHandler(productStore)
+	productHandler.RegisterRoutes(subrouter)
 
 	log.Printf("Listening on %s", s.addr)
 
