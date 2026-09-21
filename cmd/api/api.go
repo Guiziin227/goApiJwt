@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/guiziin227/goApiJwt/service/cart"
+	"github.com/guiziin227/goApiJwt/service/order"
 	"github.com/guiziin227/goApiJwt/service/product"
 	"github.com/guiziin227/goApiJwt/service/user"
 )
@@ -44,6 +46,11 @@ func (s *APIServer) Run() error {
 
 	productHandler := product.NewHandler(productStore)
 	productHandler.RegisterRoutes(subrouter)
+
+	orderStore := order.NewStore(s.db)
+
+	cartHandler := cart.NewHandler(productStore, orderStore, userStore)
+	cartHandler.RegisterRoutes(subrouter)
 
 	log.Printf("Listening on %s", s.addr)
 
