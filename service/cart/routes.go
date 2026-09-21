@@ -30,10 +30,12 @@ func NewHandler(
 }
 
 func (h *Handler) RegisterRoutes(router *mux.Router) {
-	router.HandleFunc("/cart/checkout", auth.WithJWTAuth(h.handleCheckout)).Methods(http.MethodPost)
+	router.HandleFunc("/cart/checkout", auth.WithJWTAuth(h.handleCheckout, h.userStore)).Methods(http.MethodPost)
 }
 
 func (h *Handler) handleCheckout(w http.ResponseWriter, r *http.Request) {
+
+	userId := auth.GetUserIDFromContext(r.Context())
 
 	var cart types.CartCheckoutPayload
 	if err := utils.ParseJson(r, &cart); err != nil {
@@ -60,7 +62,7 @@ func (h *Handler) handleCheckout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	orderID, totalPrice, err := h.createOrder(products, cart.Items, 0)
+	orderID, totalPrice, err := h.createOrder(products, cart.Items, userId)
 	if err != nil {
 		utils.WriteError(w, http.StatusBadRequest, err)
 		return
